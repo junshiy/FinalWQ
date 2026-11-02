@@ -1,0 +1,24 @@
+[MASTER]
+load-plugins=pylint_django
+django-settings-module=FinalWQ.settings
+ignore=migrations,.venv
+
+[MESSAGES CONTROL]
+disable=
+    missing-module-docstring,
+    missing-class-docstring,
+    too-few-public-methods,
+    duplicate-code,
+    line-too-long,
+    invalid-name
+
+[FORMAT]
+max-line-length=100
+
+[DESIGN]
+max-args=8
+max-locals=20
+
+[REPORTS]
+output-format=colorized
+score=yes

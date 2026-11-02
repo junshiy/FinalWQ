@@ -1,0 +1,121 @@
+{% load static %}<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>FinalWQ · Linux 实验故障智能诊断</title>
+  <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="logo">FQ</span>
+      <div class="brand-text">
+        <h1>Linux 实验故障智能诊断</h1>
+        <p class="sub">粘贴报错 → 定位根因 → 给出修复命令与验证方式</p>
+      </div>
+    </div>
+    <div class="meta">
+      <span class="pill">{{ library_size }} 类故障模式</span>
+      <span class="pill">离线规则引擎</span>
+      <span class="pill">响应 &lt; 5ms</span>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="panel">
+      <form method="post" action="{% url 'faultdiag:index' %}">
+        {% csrf_token %}
+        <label class="field-label" for="log">粘贴终端报错（可含多条命令输出）</label>
+        <textarea id="log" name="log" rows="10" spellcheck="false"
+                  placeholder="例如：cp: cannot create regular file '/var/log/a.log': No space left on device">{{ query }}</textarea>
+        <div class="actions">
+          <button type="submit" class="btn primary">开始诊断</button>
+          <button type="button" class="btn ghost" id="fill-sample">填入示例</button>
+          <span class="hint">支持 systemctl / nginx / ssh / pip / git 等常见报错</span>
+        </div>
+      </form>
+    </section>
+
+    {% if result %}
+    <section class="result">
+      <div class="result-head">
+        {% if result.need_human %}
+          <span class="badge warn">需人工复核</span>
+        {% elif result.matches %}
+          <span class="badge ok">已定位根因</span>
+        {% else %}
+          <span class="badge warn">未命中知识库</span>
+        {% endif %}
+        <span class="stat">耗时 {{ result.elapsed_ms }} ms</span>
+        <span class="stat">候选 {{ result.matches|length }} 条</span>
+        <span class="stat">阈值 {{ min_confidence }}</span>
+      </div>
+      <p class="tip">{{ result.message }}</p>
+
+      {% for m in result.matches %}
+      <article class="card">
+        <div class="card-head">
+          <h3><span class="idx">{{ forloop.counter }}</span>{{ m.title }}</h3>
+          <div class="conf-wrap">
+            <div class="conf-bar"><span style="width: {{ m.confidence }}%"></span></div>
+            <strong class="conf-num">{{ m.confidence }}</strong>
+          </div>
+        </div>
+        <dl>
+          <dt>根因</dt>
+          <dd>{{ m.cause }}</dd>
+          <dt>命中特征</dt>
+          <dd class="matched">{% for hit in m.matched %}<code>{{ hit }}</code>{% endfor %}</dd>
+          <dt>处置步骤</dt>
+          <dd>
+            <ol class="steps">
+              {% for step in m.steps %}<li>{{ step }}</li>{% endfor %}
+            </ol>
+          </dd>
+          <dt>验证命令</dt>
+          <dd><pre class="cmd">{{ m.verify }}</pre></dd>
+          <dt>引用来源</dt>
+          <dd class="src">{{ m.source }}</dd>
+        </dl>
+      </article>
+      {% endfor %}
+    </section>
+    {% endif %}
+
+    <section class="panel muted">
+      <h2>这个页面解决什么问题</h2>
+      <div class="grid">
+        <div>
+          <h4>没有它的时候</h4>
+          <p>学生卡在一条报错上，先截图发班群，平均等 20~40 分钟才有人回；教师重复回答同一类问题，实验课有效答疑时间被挤占。</p>
+        </div>
+        <div>
+          <h4>有它之后</h4>
+          <p>报错粘进来 5 毫秒内给出按置信度排序的根因，附可执行命令与验证方式；低于阈值直接提示转人工，不硬猜。</p>
+        </div>
+        <div>
+          <h4>怎么保证不胡说</h4>
+          <p>每条结论都来自知识库规则，必须带「引用来源」与「验证命令」；置信度低于 55 只给参考、不给结论。规则是代码，可 review、可回滚。</p>
+        </div>
+      </div>
+    </section>
+
+    <footer class="foot">
+      FinalWQ · Django + Nginx 反向代理 · 网络操作系统期末实操考核
+    </footer>
+  </main>
+
+  <script>
+    const SAMPLE = "{{ sample_log|escapejs }}";
+    const sampleBtn = document.getElementById("fill-sample");
+    const box = document.getElementById("log");
+    if (sampleBtn && box) {
+      sampleBtn.addEventListener("click", function () {
+        box.value = SAMPLE;
+        box.focus();
+      });
+    }
+  </script>
+</body>
+</html>

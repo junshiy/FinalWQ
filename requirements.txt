@@ -1,0 +1,10 @@
+# 运行时依赖
+Django==4.2.16
+gunicorn==22.0.0
+
+# 开发/质量保障依赖（make lint / test / format 使用）
+black==24.4.2
+pylint==3.2.3
+pylint-django==2.5.5
+pytest==8.2.2
+pytest-django==4.8.0

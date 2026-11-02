@@ -1,0 +1,22 @@
+[Unit]
+Description=FinalWQ Django app (gunicorn)
+After=network.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/root/FinalWQ
+Environment="DJANGO_DEBUG=0"
+Environment="DJANGO_ALLOWED_HOSTS=47.106.85.63,127.0.0.1,localhost"
+ExecStart=/root/FinalWQ/.venv/bin/gunicorn FinalWQ.wsgi:application \
+    --bind 127.0.0.1:8000 \
+    --workers 2 \
+    --timeout 60 \
+    --access-logfile - \
+    --error-logfile -
+Restart=always
+RestartSec=3
+LimitNOFILE=65535
+
+[Install]
+WantedBy=multi-user.target
